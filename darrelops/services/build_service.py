@@ -5,7 +5,7 @@ import os
 import subprocess
 import logging
 from darrelops.models import CProgramModel
-from darrelops.extensions import db
+from darrelops.extensions import db, app
 
 def clone_repository(repo_url, clone_dir):
     """Clones the GitHub repository to the specified directory."""
@@ -13,8 +13,21 @@ def clone_repository(repo_url, clone_dir):
     logger.info(f"Cloning repository {repo_url} into {clone_dir}")
 
     if os.path.exists(clone_dir):
-        logger.info(f"Directory {clone_dir} already exists. Skipping clone.")
+        logger.info(f"Directory {clone_dir} already exists. Pulling the latest commits...")
+        try:
+            result = subprocess.run(
+                ["git", "-C", clone_dir, "pull"],
+                capture_output=True,
+                text=True
+            )
+            if result.returncode != 0:
+                raise Exception(f"Git pull failed: {result.stderr}")
+            logger.info(f"Repository updated with most recent commits successfully: {result.stdout}")
+        except Exception as e:
+            logger.error(f"Failed to pull latest commits: {str(e)}")
+            return False
     else:
+        logger.info(f"Directory {clone_dir} does not exists. Cloning repository {repo_url} into {clone_dir}...")
         try:
             result = subprocess.run(
                 ["git", "clone", repo_url, clone_dir],
@@ -23,9 +36,9 @@ def clone_repository(repo_url, clone_dir):
             )
             if result.returncode != 0:
                 raise Exception(f"Git clone failed: {result.stderr}")
-            logger.info(f"Repository cloned successfully: {result.stdout}")
+            logger.info(f"Repository updated with most recent commits successfully: {result.stdout}")
         except Exception as e:
-            logger.error(f"Failed to clone repository: {str(e)}")
+            logger.error(f"Failed to pull latest commits: {str(e)}")
             return False
     return True
 
@@ -67,24 +80,35 @@ def build_program(program: CProgramModel):
 
 def check_for_new_commits():
     """Check all registed programs for new commits and triggers a build if new commits are found."""
-    programs = CProgramModel.query.all()
-    for program in programs:
-        if not program.repo_url:
-            continue
-        
-        # fetch latest commits
-        repo_dir = os.path.join('repos', program.name)
-        if os.path.exists(repo_dir):
-            result = subprocess.run(
-                ["git", "-C", repo_dir, "pull"],
-                capture_output=True,
-                text=True
-            )
-            if result.returncode == 0 and "Already up to date." not in result.stdout:
-                # new commits found, trigger a build
-                build_program(program)
-            else:
-                print(f"No new commits found for {program.name}.")
-        else:
-            print(f"Repository directory {repo_dir} not found.")
+    logger = logging.getLogger('Build Service: checking for new commits')
     
+    with app.app_context():
+        
+        programs = CProgramModel.query.all()
+        for program in programs:
+            logger.info(f"Checking for new commits for program {program.name}...")
+            
+            if not program.repo_url:
+                continue
+            
+            # fetch latest commits
+            repo_dir = os.path.join('repos', program.name)
+            if os.path.exists(repo_dir):
+                try:
+                    result = subprocess.run(
+                        ["git", "-C", repo_dir, "pull"],
+                        capture_output=True,
+                        text=True
+                    )
+                    if result.returncode == 0 and "Already up to date." not in result.stdout:
+                        # new commits found, trigger a build
+                        logger.info(f"New commits found for {program.name}. Rebuilding...")
+                        build_program(program)
+                    else:
+                        print(f"No new commits found for {program.name}.")
+                except Exception as e:
+                    logger.error(f"Failed to pull latest commits for {program.name}: {str(e)}")
+            else:
+                logger.warning(f"Repository directory {repo_dir} does not exist.")
+                print(f"Repository directory {repo_dir} not found.")
+        
