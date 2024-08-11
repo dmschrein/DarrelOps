@@ -1,1 +1,9 @@
-/venv
+.venv
+
+artifactory/
+
+darrelops.egg-info
+hello/
+repos/
+app.log
+hello.zip

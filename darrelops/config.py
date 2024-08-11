@@ -8,4 +8,3 @@ from darrelops import (
 )
 
 CONFIG_DIR = Path(typer.get_app_dir("__app_name__"))
-CONFIG_

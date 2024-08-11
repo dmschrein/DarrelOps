@@ -1,0 +1,2 @@
+[console_scripts]
+darrelops = darrelops.__main__:main
