@@ -2,7 +2,7 @@
 # darrelops/__main__.py
 
 import sys
-from darrelops import app, create_database, cli, __app_name__
+from darrelops import app, create_database, __app_name__
 import darrelops.api
 
 def main():
@@ -13,7 +13,7 @@ def main():
         # run flask api server
         app.run(debug=True)
     else:
-        cli.app(prog_name=__app_name__)
+        print(f"Can't run server")
 
     
 if __name__ == '__main__':

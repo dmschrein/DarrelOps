@@ -34,7 +34,8 @@ class RegisterProgram(Resource):
     def post(self):
         logger = logging.getLogger('RegisterProgram')
         
-        logger.info("Recieved request to register a new program.")
+        logger.info("Received request to register a new program.")
+        #program = None  # Initialize the program variable
         
         if 'files' in request.files:
             uploaded_file = request.files['files']
@@ -48,8 +49,6 @@ class RegisterProgram(Resource):
                 uploaded_file.save(destination)
                 logger.info(f"File uploaded and saved at {destination}.")
             
-                # Create CProgramModel entry if based on uploaded file 
-                # may be unnecessary since additional commits are expected if build fails
                 program = CProgramModel(
                     name=filename.rsplit('.', 1)[0],
                     repo_url=None,
@@ -59,19 +58,16 @@ class RegisterProgram(Resource):
                 db.session.add(program)
                 db.session.commit()
                 logger.info(f"Program {program.name} registered successfully.")
-                return program, 201
             else:
                 logger.error("Invalid file type.")
                 return jsonify({'error': 'Invalid file type'}), 400
              
-        # If no file, check for GitHub URL
         elif 'repo_url' in request.json:
             repo_url = request.json['repo_url']
             name = request.json.get('name', repo_url.split('/')[-1].replace('.git', ''))
             build_cmd = request.json.get('build_cmd', 'make')
             build_dir = request.json.get('build_dir', './')
 
-            # Create a CProgramModel entry based on the GitHub URL
             program = CProgramModel(
                 name=name,
                 repo_url=repo_url,
@@ -86,7 +82,6 @@ class RegisterProgram(Resource):
             logger.error("No file or repo URL provided.")
             return jsonify({'error': 'No file or repo URL provided'}), 400
         
-        # after registration, trigger build and deploy
         if program:
             logger.info(f"Starting build for program {program.name}.")
             build_success = build_program(program)
@@ -95,13 +90,15 @@ class RegisterProgram(Resource):
                 deploy_success = deploy_to_artifactory(os.path.join(program.build_dir, program.name), program)
                 if deploy_success:
                     logger.info(f"Deployment succeeded for program {program.name}.")
-                    return program, jsonify({'message': 'Program registered, built, and deployed successfully'}), 201
+                    return program, 201
+                    
                 else:
                     logger.error(f"Deployment failed for program {program.name}")
                     return jsonify({'error': 'Program registered and built, but deployment failed'}), 500
             else:
                 logger.error(f"Build failed for program {program.name}.")
                 return jsonify({'error': 'Program registered, but build failed'}), 500
+
         logger.error("Registration failed for unknown reasons.")  
         return jsonify({'error': 'Registration failed'}), 500
     

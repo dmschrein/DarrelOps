@@ -5,6 +5,7 @@ import os
 import subprocess
 import logging
 from darrelops.models import CProgramModel
+from darrelops.extensions import db
 
 def clone_repository(repo_url, clone_dir):
     """Clones the GitHub repository to the specified directory."""
@@ -63,3 +64,27 @@ def build_program(program: CProgramModel):
     except Exception as e:
         logger.error(f"Build process encountered an exception: {str(e)}")
         return False
+
+def check_for_new_commits():
+    """Check all registed programs for new commits and triggers a build if new commits are found."""
+    programs = CProgramModel.query.all()
+    for program in programs:
+        if not program.repo_url:
+            continue
+        
+        # fetch latest commits
+        repo_dir = os.path.join('repos', program.name)
+        if os.path.exists(repo_dir):
+            result = subprocess.run(
+                ["git", "-C", repo_dir, "pull"],
+                capture_output=True,
+                text=True
+            )
+            if result.returncode == 0 and "Already up to date." not in result.stdout:
+                # new commits found, trigger a build
+                build_program(program)
+            else:
+                print(f"No new commits found for {program.name}.")
+        else:
+            print(f"Repository directory {repo_dir} not found.")
+    
