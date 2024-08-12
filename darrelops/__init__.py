@@ -3,50 +3,41 @@ Top-level package for DarrelOps.
 """
 # darrelops/__init__.py
 
-from .extensions import app, db_cprogram, db_artfact, api
+from flask import Flask
 import os
-import logging
+from .utils.logging_setup import setup_logging
+from .utils.extensions import scheduler, init_extensions, db
+from .utils.config import DbConfig
+from atexit import register as atexit_register
+from apscheduler.triggers.interval import IntervalTrigger
+from .utils.constants import *
+from .utils.logging_setup import setup_logging
+from .api import initialize_routes
+
 
 __app_name__ = "darrelops"
 __version__ = "0.1.0"
 
-(
-    SUCCESS,
-    DIR_ERROR,
-    FILE_ERROR,
-    REG_ERROR,
-    ART_READ_ERROR, 
-    ART_WRITE_ERROR,
-    JSON_ERROR,
-) = range(7)
+def create_app():
+    """Application factory function for Darrel Ops Project"""
 
-ERRORS = {
-    DIR_ERROR: "config directory error",
-    FILE_ERROR: "config file error",
-    REG_ERROR: "program registration error",
-    ART_READ_ERROR: "artifactory read error",
-    ART_WRITE_ERROR: "artifactory write error",
-}
-
-# for filesystem
-ARTIFACTORY_BASE_DIR = os.getenv('ARTIFACTORY_BASE_DIR', default=os.path.join(os.getcwd(), 'artifactory'))
-
-
-def create_cprogram_tables():
-    with app.app_context():
-        db_cprogram.create_all()
-        
-def create_artifact_tables():
-    with app.app_context():
-        db_artfact.create_all()
+    app = Flask(__app_name__)
     
-logging.basicConfig(
-    level=logging.INFO,  # Set the logging level
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Log message format
-    handlers=[
-        logging.StreamHandler(),  # Output to console
-        logging.FileHandler("app.log"),  # Output to a log file
-    ]
-)
+    # Config setup db
+    app.config.from_object(DbConfig)
 
-logger = logging.getLogger(__name__)  # Create a logger for the current module
+    # initialize extensions
+    init_extensions(app)
+
+    # setup logging
+    setup_logging()
+    
+    initialize_routes(app)
+    
+    with app.app_context():
+        db.create_all()
+
+    # Shutdown the scheduler when exiting the app
+    atexit_register(lambda: scheduler.shutdown())
+    
+    return app

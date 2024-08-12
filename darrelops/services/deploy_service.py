@@ -1,9 +1,8 @@
 import os
 import shutil
 import logging
-from darrelops.models import ArtifactModel, CProgramModel
-from darrelops import ARTIFACTORY_BASE_DIR
-from darrelops.extensions import app, db_artfact
+from darrelops.models import ArtifactModel
+from darrelops.utils.extensions import app, db
 
 # deploy artifact to filesystem
 # def deploy_to_artifactory(artifact: ArtifactModel):
@@ -22,11 +21,10 @@ from darrelops.extensions import app, db_artfact
 #         logger.error(f"Deployment failed for program ID {artifact.program_id}: {str(e)}")
 #         return False
 
-
-        
-def deploy_to_artifactory_db(program: CProgramModel, artifact_path:str):
+# deploy to database       
+def deploy_to_artifactory_db(program, artifact_path:str):
     logger = logging.getLogger('DeployService')
-    logger.info(f"Deploying artifact for program {program.version} for program ID to Artifactory database.")
+    logger.info(f"Deploying artifact for program {program['version']} for program ID to Artifactory database.")
     
     try:
         # read artifact
@@ -35,16 +33,16 @@ def deploy_to_artifactory_db(program: CProgramModel, artifact_path:str):
             
         with app.app_context():
             artifact= ArtifactModel(
-                program=program.id,
+                program_id=program['id'],
                 artifact_name=os.path.basename(artifact_path),
-                artifact_version=program.version,
+                artifact_version=program['version'],
                 artifact_data=artifact_data
             )
-            db_artfact.session.add(artifact)
-            db_artfact.session.commit()
-            logger.info(f"Artifact entry created in Artifactory database for program {program.name}")
+            db.session.add(artifact)
+            db.session.commit()
+            logger.info(f"Artifact entry created in Artifactory database for program {program['name']}")
 
         return True
     except Exception as e:
-        logger.error(f"Deployment failed for program ID {program.id}: {str(e)}")
+        logger.error(f"Deployment failed for program ID {program['id']}: {str(e)}")
         return False

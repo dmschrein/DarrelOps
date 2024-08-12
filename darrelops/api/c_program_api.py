@@ -1,18 +1,15 @@
+"""Api to register and manage C programs"""
 from flask import jsonify, request
 from flask_restful import Resource, reqparse, fields, marshal_with
 import os
-import requests
-from ..extensions import app, db, api
+from ..utils.extensions import api
 from werkzeug.utils import secure_filename
-from ..models import CProgramModel
 from ..services.build_service import build_program
 from ..services.deploy_service import deploy_to_artifactory_db
 from ..services.util import allowed_file
+from ..utils.constants import PROGRAMS_JSON_PATH
 import logging
-
-# artifactory config
-# ARTIFACTORY_URL = "http://localhost/artifactory"
-# ARTIFACTORY_API_KEY = "fake-test-key"
+import json
 
 reg_program_args = reqparse.RequestParser()
 reg_program_args.add_argument('name', type=str, required=True, help="Program name is required")
@@ -29,12 +26,26 @@ programFields = {
     'build_dir': fields.String,
 }
 
+def load_programs():
+    """Load registered programs from JSON file."""
+    if os.path.exists(PROGRAMS_JSON_PATH):
+        with open(PROGRAMS_JSON_PATH, 'r') as file:
+            return json.load(file)
+    return []
+
+def save_programs(programs):
+    """Save registered programs to JSON file."""
+    with open(PROGRAMS_JSON_PATH, 'w') as file:
+        json.dump(programs, file, indent=4)
+
 class RegisterProgram(Resource):
     @marshal_with(programFields)
     def post(self):
         logger = logging.getLogger('RegisterProgram')
         
         logger.info("Received request to register a new program.")
+        
+        programs = load_programs()
         
         if 'files' in request.files:
             uploaded_file = request.files['files']
@@ -46,17 +57,17 @@ class RegisterProgram(Resource):
                 filename = secure_filename(uploaded_file.filename)
                 destination = os.path.join('uploads/', filename)
                 uploaded_file.save(destination)
-                logger.info(f"File uploaded and saved at {destination}.")
+                logger.info(f"File uploaded and saved at {destination}.") # file registered
             
-                program = CProgramModel(
-                    name=filename.rsplit('.', 1)[0],
-                    repo_url=None,
-                    build_cmd="make",
-                    build_dir="./"
-                )
-                db.session.add(program)
-                db.session.commit()
-                logger.info(f"Program {program.name} registered successfully.")
+                program = {
+                    "name": filename.rsplit('.', 1)[0],
+                    "repo_url": None,
+                    "build_cmd": "make",
+                    "build_dir": "./"
+                }
+                program.append(program)
+                save_programs(programs)
+                logger.info(f"Program {program['name']} registered successfully.")
             else:
                 logger.error("Invalid file type.")
                 return jsonify({'error': 'Invalid file type'}), 400
@@ -67,35 +78,36 @@ class RegisterProgram(Resource):
             build_cmd = request.json.get('build_cmd', 'make')
             build_dir = request.json.get('build_dir', './')
 
-            program = CProgramModel(
-                name=name,
-                repo_url=repo_url,
-                build_cmd=build_cmd,
-                build_dir=build_dir
-            )
-            db.session.add(program)
-            db.session.commit()
-            logger.info(f"Program {program.name} registered successfully from repository {repo_url}")
+            program = {
+                "name": name,
+                "repo_url": repo_url,
+                "build_cmd": build_cmd,
+                "build_dir": build_dir
+            }
+                
+            program.append(program)
+            save_programs(programs)
+            logger.info(f"Program {program['name']} registered successfully from repository {repo_url}")
             
         else:
             logger.error("No file or repo URL provided.")
             return jsonify({'error': 'No file or repo URL provided'}), 400
         
         if program:
-            logger.info(f"Starting build for program {program.name}.")
+            logger.info(f"Starting build for program {program['name']}.")
             build_success = build_program(program)
             if build_success:
-                logger.info(f"Build succeeded for program {program.name}. Starting deployment.")
-                deploy_success = deploy_to_artifactory_db(os.path.join(program.build_dir, program.name), program)
+                logger.info(f"Build succeeded for program {program['name']}. Starting deployment.")
+                deploy_success = deploy_to_artifactory_db(os.path.join(program['build_dir'], program['name']), program)
                 if deploy_success:
-                    logger.info(f"Deployment succeeded for program {program.name}.")
+                    logger.info(f"Deployment succeeded for program {program['name']}.")
                     return program, 201
                     
                 else:
-                    logger.error(f"Deployment failed for program {program.name}")
+                    logger.error(f"Deployment failed for program {program['name']}")
                     return jsonify({'error': 'Program registered and built, but deployment failed'}), 500
             else:
-                logger.error(f"Build failed for program {program.name}.")
+                logger.error(f"Build failed for program {program['name']}.")
                 return jsonify({'error': 'Program registered, but build failed'}), 500
 
         logger.error("Registration failed for unknown reasons.")  
@@ -103,7 +115,7 @@ class RegisterProgram(Resource):
     
     @marshal_with(programFields)
     def get(self):
-        programs = CProgramModel.query.all()
+        programs = load_programs()
         return programs, 200
         
 api.add_resource(RegisterProgram, '/api/register') 

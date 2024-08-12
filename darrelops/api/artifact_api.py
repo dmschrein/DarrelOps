@@ -1,12 +1,17 @@
 """Artifact api to retrieve bundled artifacts"""
 
 from flask_restful import Resource
-from flask import send_file
+from flask import send_file, abort
+from ..utils.extensions import api
 from darrelops.models import ArtifactModel
 from io import BytesIO
+import logging
+
 
 class DownloadArtifact(Resource):
     def get(self, program_id, version):
+        logger = logging.getLogger('Download Artifact')
+        
         artifact = ArtifactModel.query.filter_by(program_id=program_id, artifact_version=version).first()
         
         if not artifact:

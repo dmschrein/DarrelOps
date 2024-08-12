@@ -1,3 +1,4 @@
+"""Helper functions and utilities"""
 # darrelops/services/util.py
 
 def allowed_file(filename):
