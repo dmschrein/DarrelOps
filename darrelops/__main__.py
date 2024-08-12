@@ -13,7 +13,7 @@ def main():
         # run flask api server
         app.run(debug=True)
     else:
-        cli.app(prog_name=__app_name__)
+        print(f"Can't run server")
 
     
 if __name__ == '__main__':
