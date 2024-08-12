@@ -2,12 +2,13 @@
 # darrelops/__main__.py
 
 import sys
-from darrelops import app, create_database, __app_name__
-import darrelops.api
+from darrelops import app, create_cprogram_tables, create_artifact_tables, __app_name__
+import darrelops.api.c_program_api
 
 def main():
 
-    create_database()
+    create_cprogram_tables()
+    create_artifact_tables()
     
     if len(sys.argv) > 1 and sys.argv[1] == "runserver":
         # run flask api server

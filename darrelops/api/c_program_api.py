@@ -2,17 +2,17 @@ from flask import jsonify, request
 from flask_restful import Resource, reqparse, fields, marshal_with
 import os
 import requests
-from .extensions import app, db, api
+from ..extensions import app, db, api
 from werkzeug.utils import secure_filename
-from .models import CProgramModel
-from .services.build_service import build_program
-from .services.deploy_service import deploy_to_artifactory
-from .services.util import allowed_file
+from ..models import CProgramModel
+from ..services.build_service import build_program
+from ..services.deploy_service import deploy_to_artifactory_db
+from ..services.util import allowed_file
 import logging
 
 # artifactory config
-ARTIFACTORY_URL = "http://localhost/artifactory"
-ARTIFACTORY_API_KEY = "fake-test-key"
+# ARTIFACTORY_URL = "http://localhost/artifactory"
+# ARTIFACTORY_API_KEY = "fake-test-key"
 
 reg_program_args = reqparse.RequestParser()
 reg_program_args.add_argument('name', type=str, required=True, help="Program name is required")
@@ -35,7 +35,6 @@ class RegisterProgram(Resource):
         logger = logging.getLogger('RegisterProgram')
         
         logger.info("Received request to register a new program.")
-        #program = None  # Initialize the program variable
         
         if 'files' in request.files:
             uploaded_file = request.files['files']
@@ -87,7 +86,7 @@ class RegisterProgram(Resource):
             build_success = build_program(program)
             if build_success:
                 logger.info(f"Build succeeded for program {program.name}. Starting deployment.")
-                deploy_success = deploy_to_artifactory(os.path.join(program.build_dir, program.name), program)
+                deploy_success = deploy_to_artifactory_db(os.path.join(program.build_dir, program.name), program)
                 if deploy_success:
                     logger.info(f"Deployment succeeded for program {program.name}.")
                     return program, 201

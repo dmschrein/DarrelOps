@@ -3,7 +3,7 @@ Top-level package for DarrelOps.
 """
 # darrelops/__init__.py
 
-from .extensions import app, db, api
+from .extensions import app, db_cprogram, db_artfact, api
 import os
 import logging
 
@@ -28,15 +28,18 @@ ERRORS = {
     ART_WRITE_ERROR: "artifactory write error",
 }
 
-def create_database():
-    if not os.path.exists('database.db'):
-        with app.app_context():
-            db.create_all()
-        print("Database created successfully.")
-    else:
-        print("Database already exists")
+# for filesystem
+ARTIFACTORY_BASE_DIR = os.getenv('ARTIFACTORY_BASE_DIR', default=os.path.join(os.getcwd(), 'artifactory'))
 
 
+def create_cprogram_tables():
+    with app.app_context():
+        db_cprogram.create_all()
+        
+def create_artifact_tables():
+    with app.app_context():
+        db_artfact.create_all()
+    
 logging.basicConfig(
     level=logging.INFO,  # Set the logging level
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Log message format

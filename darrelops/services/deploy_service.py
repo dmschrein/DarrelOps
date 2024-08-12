@@ -1,19 +1,50 @@
 import os
 import shutil
 import logging
-from darrelops.models import CProgramModel
+from darrelops.models import ArtifactModel, CProgramModel
+from darrelops import ARTIFACTORY_BASE_DIR
+from darrelops.extensions import app, db_artfact
 
-def deploy_to_artifactory(artifact_path, program: CProgramModel):
+# deploy artifact to filesystem
+# def deploy_to_artifactory(artifact: ArtifactModel):
+#     logger = logging.getLogger('DeployService')
+#     logger.info(f"Deploying artifact for program {artifact.version} for program ID {artifact.program_id} to Artifactory.")
+
+#     #base_dir = os.getenv('ARTIFACTORY_BASE_DIR', os.path.abspath(os.path.dirname(__file__)))
+#     deploy_dir = os.path.join(ARTIFACTORY_BASE_DIR, str(artifact.program_id), artifact.version)
+#     os.makedirs(deploy_dir, exist_ok=True)
+
+#     try:
+#         shutil.move(artifact.artifact_path, deploy_dir)
+#         logger.info(f"Artifact for {artifact.version} for program ID {artifact.program_id} deployed to {deploy_dir}.")
+#         return True
+#     except Exception as e:
+#         logger.error(f"Deployment failed for program ID {artifact.program_id}: {str(e)}")
+#         return False
+
+
+        
+def deploy_to_artifactory_db(program: CProgramModel, artifact_path:str):
     logger = logging.getLogger('DeployService')
-    logger.info(f"Deploying artifact for program {program.name} to Artifactory.")
-
-    deploy_dir = os.path.join('artifactory', program.name)
-    os.makedirs(deploy_dir, exist_ok=True)
-
+    logger.info(f"Deploying artifact for program {program.version} for program ID to Artifactory database.")
+    
     try:
-        shutil.move(artifact_path, deploy_dir)
-        logger.info(f"Artifact for {program.name} deployed to {deploy_dir}.")
+        # read artifact
+        with open(artifact_path, 'rb') as artifact_file:
+            artifact_data = artifact_file.read()
+            
+        with app.app_context():
+            artifact= ArtifactModel(
+                program=program.id,
+                artifact_name=os.path.basename(artifact_path),
+                artifact_version=program.version,
+                artifact_data=artifact_data
+            )
+            db_artfact.session.add(artifact)
+            db_artfact.session.commit()
+            logger.info(f"Artifact entry created in Artifactory database for program {program.name}")
+
         return True
     except Exception as e:
-        logger.error(f"Deployment failed for program {program.name}: {str(e)}")
+        logger.error(f"Deployment failed for program ID {program.id}: {str(e)}")
         return False

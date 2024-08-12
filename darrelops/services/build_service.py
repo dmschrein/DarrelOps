@@ -6,6 +6,7 @@ import subprocess
 import logging
 from darrelops.models import CProgramModel
 from darrelops.extensions import db, app
+from darrelops.services import package_artifact
 
 def clone_repository(repo_url, clone_dir):
     """Clones the GitHub repository to the specified directory."""
@@ -42,17 +43,18 @@ def clone_repository(repo_url, clone_dir):
             return False
     return True
 
+# build the C program
 def build_program(program: CProgramModel):
     logger = logging.getLogger('BuildService')
 
-    # Step 1: Clone the repository
+    # Clone the repository
     clone_dir = os.path.join('repos', program.name)
     repo_cloned = clone_repository(program.repo_url, clone_dir)
     if not repo_cloned:
         logger.error(f"Failed to clone repository for program {program.name}")
         return False
 
-    # Step 2: Update the build directory to the cloned repository
+    # Update the build directory to the cloned repository
     program.build_dir = clone_dir
 
     # Log the files in the build directory
@@ -73,7 +75,12 @@ def build_program(program: CProgramModel):
             raise Exception(f"Build failed: {result.stderr}")
         
         logger.info(f"Build succeeded for program {program.name}: {result.stdout}")
-        return True
+        
+        # Step 4: Package the artifact
+        artifact_path = package_artifact(program)
+        logger.info(f"Artifact packaged at {artifact_path}")
+        return artifact_path
+    
     except Exception as e:
         logger.error(f"Build process encountered an exception: {str(e)}")
         return False

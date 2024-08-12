@@ -8,9 +8,19 @@ import atexit
 #TODO: add logic for fetching new commits made to the repo
 
 # Initialize app
+db_cprogram = SQLAlchemy()
+db_artfact = SQLAlchemy()
+
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
-db = SQLAlchemy(app)
+
+app.config['SQLALCHEMY_BINDS'] = {
+    'cprogram_db': 'sqlite:///cprogram.db',
+    'artfact_db': 'sqlite:///artfact.db'
+}
+
+db_cprogram.init_app(app)
+db_artfact.init_app(app)
+
 api = Api(app)
 
 # Initiaze the scheduler
