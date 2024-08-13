@@ -1,19 +1,36 @@
+
+# darrelops/serivces/deploy_service.py
+
 import os
-import shutil
 import logging
-from darrelops.models import CProgramModel
+from darrelops.models import db, ArtifactModel, CProgramModel
 
-def deploy_to_artifactory(artifact_path, program: CProgramModel):
+def deploy_artifact(artifact_path, program: CProgramModel, version):
     logger = logging.getLogger('DeployService')
-    logger.info(f"Deploying artifact for program {program.name} to Artifactory.")
-
-    deploy_dir = os.path.join('artifactory', program.name)
-    os.makedirs(deploy_dir, exist_ok=True)
+    logger.info(f"Deploying artifact for program {program.name} to the database.")
 
     try:
-        shutil.move(artifact_path, deploy_dir)
-        logger.info(f"Artifact for {program.name} deployed to {deploy_dir}.")
+        # Reading the artifact as binary data
+        with open(artifact_path, 'rb') as artifact_file:
+            artifact_data = artifact_file.read()
+        
+        artifact_name = os.path.basename(artifact_path)
+
+        # Creating an ArtifactModel entry
+        artifact = ArtifactModel(
+            program_id=program.id,
+            artifact_name=artifact_name,
+            artifact_path=artifact_path,
+            version=version,
+            artifact_data=artifact_data
+        )
+
+        # Adding the artifact to the database session and committing
+        db.session.add(artifact)
+        db.session.commit()
+
+        logger.info(f"Artifact {artifact_name} for program {program.name} deployed to the database successfully.")
         return True
     except Exception as e:
-        logger.error(f"Deployment failed for program {program.name}: {str(e)}")
+        logger.error(f"Deployment to database failed for program {program.name}: {str(e)}")
         return False
