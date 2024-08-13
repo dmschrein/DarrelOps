@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Build Status</title>
+    <style>
+        .status-completed {
+            color: green;
+            font-weight: bold;
+        }
+        .status-failed {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
     <h1>Build Statuses</h1>
@@ -12,7 +22,10 @@
         <ul>
         {% for status in program.build_statuses %}
             <li>
-                Commit: {{ status.program_id }} | Status: {{ status.status }} | 
+                Commit: {{ status.checksum }} | 
+                Status: <span class="{% if status.status == 'completed' %}status-completed{% elif status.status == 'failed' %}status-failed{% endif %}">
+                    {{ status.status }}
+                </span> | 
                 Time: {{ status.timestamp }} | 
                 {% if status.log %}
                     <details>
