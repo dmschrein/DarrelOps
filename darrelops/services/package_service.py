@@ -11,7 +11,10 @@ from darrelops.models import CProgramModel, ArtifactModel
 
 def package_artifact(program: CProgramModel):
     # Determine the directory for storing the artifacts
-    artifact_dir = os.path.join('artifacts', program.name, program.build_dir)
+    artifactory_dir = 'artifactory'
+    if not os.path.exists(artifactory_dir):
+        os.makedirs(artifactory_dir)
+    artifact_dir = os.path.join(artifactory_dir, 'artifacts', program.name)
     os.makedirs(artifact_dir, exist_ok=True)
 
     # Determine the latest version of the artifact
@@ -19,20 +22,12 @@ def package_artifact(program: CProgramModel):
     
     if latest_artifact:
         # Parse the latest version to determine the next version
-        version_parts = latest_artifact.version.split('.')
-        
-        # Assuming the version is in the form of 1.0.RC1 or 1.0.RELEASE
-        if "RC" in version_parts[-1]:
-            rc_version = int(version_parts[-1].replace("RC", "")) + 1
-            new_version = f"{version_parts[0]}.{version_parts[1]}.RC{rc_version}"
-        elif version_parts[-1] == "RELEASE":
-            new_version = f"{version_parts[0]}.{version_parts[1]}.RELEASE"
-        else:
-            # If it's a final version without RC, increment the patch number
-            new_version = f"{version_parts[0]}.{version_parts[1]}.RC1"
+        version_parts = list(map(int, latest_artifact.version.split('.')))
+        version_parts[-1] += 1  # Increment the patch version
+        new_version = '.'.join(map(str, version_parts))
     else:
-        # Default to version 1.0.0.RC1 if no previous version exists
-        new_version = "1.0.RC1"
+        # Default to version 1.0.0 if no previous version exists
+        new_version = "1.0.0"
 
     # Create the artifact name and path using the new version
     artifact_name = f"{program.name}-{new_version}.zip"

@@ -29,7 +29,13 @@ ERRORS = {
 }
 
 def create_database():
-    if not os.path.exists('database.db'):
+    if not os.path.exists('artifactory'):
+        os.makedirs('artifactory')
+    
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    # Check if the database file exists in the 'artifactory' directory
+    database_path = os.path.join(basedir, 'artifactory', 'database.db')
+    if not os.path.exists(database_path):
         with app.app_context():
             db.create_all()
         print("Database created successfully.")

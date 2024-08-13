@@ -4,12 +4,25 @@ from flask_restful import Api
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 import atexit
+import os
 
 #TODO: add logic for fetching new commits made to the repo
 
 # Initialize app
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+
+# DB Setup
+# Get the absolute path to the 'artifactory' directory
+basedir = os.path.abspath(os.path.dirname(__file__))
+database_path = os.path.join(basedir, 'artifactory', 'database.db')
+
+# Ensure the directory exists
+if not os.path.exists(os.path.join(basedir, 'artifactory')):
+    os.makedirs(os.path.join(basedir, 'artifactory'))
+
+# Update the SQLAlchemy configuration to use the absolute path
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{database_path}'
+
 db = SQLAlchemy(app)
 api = Api(app)
 

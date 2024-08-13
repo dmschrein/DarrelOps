@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Build Status</title>
+</head>
+<body>
+    <h1>Build Statuses</h1>
+    {% for program in programs %}
+        <h2>{{ program.name }}</h2>
+        <ul>
+        {% for status in program.build_statuses %}
+            <li>
+                Commit: {{ status.commit_hash }} | Status: {{ status.status }} | 
+                Time: {{ status.timestamp }} | 
+                {% if status.log %}
+                    <details>
+                        <summary>Log</summary>
+                        <pre>{{ status.log }}</pre>
+                    </details>
+                {% endif %}
+            </li>
+        {% endfor %}
+        </ul>
+    {% endfor %}
+</body>
+</html>
