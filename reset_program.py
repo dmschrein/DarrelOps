@@ -20,9 +20,9 @@ def remove_directory(dir_path):
 def reset_program():
     """Reset the program by removing specific files and directories."""
     # Paths to remove
-    database_path = 'instance/database.db'
-    artifactory_path = 'artifactory'
-    repos_path = 'repos'
+    database_path = 'darrelops/artifactory/database.db'
+    artifactory_path = 'darrelops/artifactory/'
+    repos_path = 'darrelops/repos'
     
 
     # Remove the database file

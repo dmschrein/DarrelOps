@@ -12,7 +12,7 @@
         <ul>
         {% for status in program.build_statuses %}
             <li>
-                Commit: {{ status.commit_hash }} | Status: {{ status.status }} | 
+                Commit: {{ status.program_id }} | Status: {{ status.status }} | 
                 Time: {{ status.timestamp }} | 
                 {% if status.log %}
                     <details>

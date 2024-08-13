@@ -34,9 +34,9 @@ def register_scheduler_jobs():
     from .services import check_for_new_commits
     scheduler.add_job(
         func=check_for_new_commits,
-        trigger=IntervalTrigger(seconds=60),
+        trigger=IntervalTrigger(seconds=120),
         id='check_for_new_commits',
-        name='Check for new commits every 60 seconds',
+        name='Check for new commits every 120 seconds',
         replace_existing=True
     )
     

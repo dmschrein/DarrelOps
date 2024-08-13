@@ -9,7 +9,8 @@ class CProgramModel(db.Model):
     repo_url = db.Column(db.String, unique=False, nullable=False)
     build_cmd = db.Column(db.String, nullable=False, default="make")
     build_dir = db.Column(db.String, nullable=False, default="./")
-    latest_commit = db.Column(db.String(40), nullable=True)
+    latest_commit = db.Column(db.String(40), nullable=True) 
+
     
     # Define the relationship to ArtifactModel
     artifacts = db.relationship('ArtifactModel', backref='program', lazy=True)
@@ -38,10 +39,10 @@ class BuildStatusModel(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     program_id = db.Column(db.Integer, db.ForeignKey('c_program_model.id'), nullable=False)
-    commit_hash = db.Column(db.String(40), nullable=False)
+    checksum = db.Column(db.String(64), nullable=False)  # Updated to store the checksum
     status = db.Column(db.String(20), nullable=False)  # Status can be 'completed', 'failed', 'building'
     timestamp = db.Column(db.DateTime, nullable=False, default=lambda: datetime.datetime.now(datetime.timezone.utc))
     log = db.Column(db.Text, nullable=True)  # Store build logs or error messages
 
     def __repr__(self):
-        return f"BuildStatus(program_id={self.program_id}, commit_hash={self.commit_hash}, status={self.status})"
+        return f"BuildStatus(program_id={self.program_id}, checksum={self.checksum}, status={self.status})"
