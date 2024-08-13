@@ -3,7 +3,7 @@ Top-level package for DarrelOps.
 """
 # darrelops/__init__.py
 
-from .extensions import app, db, api
+from .extensions import app, db
 import os
 import logging
 

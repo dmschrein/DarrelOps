@@ -3,7 +3,7 @@
 
 import sys
 from darrelops import app, create_database, __app_name__
-import darrelops.api
+import darrelops.api.register_api
 
 def main():
 

@@ -1,19 +1,17 @@
-from flask import jsonify, request, send_file, abort, render_template
+"""Defines APIs for registering C programs"""
+
+from flask import jsonify, request
 from flask_restful import Resource, reqparse, fields, marshal_with
 import os
-import requests
-from .extensions import app, db, api
+from ..extensions import db
 from werkzeug.utils import secure_filename
-from .models import CProgramModel, ArtifactModel
+from ..models import CProgramModel
 from sqlalchemy.exc import IntegrityError
-from .services.build_service import build_program
-from .services.deploy_service import deploy_artifact
-from .services.package_service import package_artifact
-from .services.util import allowed_file
+from ..services.build_service import build_program
+from ..services.deploy_service import deploy_artifact
+from ..services.package_service import package_artifact
+from ..services.util import allowed_file
 
-
-
-from io import BytesIO
 import logging
 
 
@@ -129,66 +127,3 @@ class RegisterProgram(Resource):
         programs = CProgramModel.query.all()
         return programs, 200
     
-# Define the output format for the artifacts
-artifact_fields = {
-    'artifact_id': fields.Integer,
-    'program_id': fields.Integer,
-    'artifact_name': fields.String,
-    'artifact_path': fields.String,
-    'version': fields.String,
-}
-
-class ListArtifacts(Resource):
-    @marshal_with(artifact_fields)
-    def get(self, program_id=None):
-        logger = logging.getLogger('ListArtifacts')
-
-        if program_id:
-            # Query all artifacts associated with the given program_id
-            artifacts = ArtifactModel.query.filter_by(program_id=program_id).all()
-            if not artifacts:
-                logger.info(f"No artifacts found for program ID {program_id}.")
-                return {'message': 'No artifacts found for this program.'}, 404
-            logger.info(f"Found {len(artifacts)} artifacts for program ID {program_id}.")
-        else:
-            # Query all artifacts in the database
-            artifacts = ArtifactModel.query.all()
-            logger.info(f"Found {len(artifacts)} artifacts in total.")
-
-        return artifacts, 200
-
-class DownloadArtifact(Resource):
-    def get(self, program_id, version):
-        logger = logging.getLogger('DownloadArtifact')
-
-        # Query the artifact based on program_id and version
-        artifact = ArtifactModel.query.filter_by(program_id=program_id, version=version).first()
-        
-        if not artifact:
-            logger.error(f"Artifact not found for program ID {program_id} and version {version}.")
-            abort(404, description="Artifact not found")
-
-        # Create a file-like object from the binary data
-        artifact_file = BytesIO(artifact.artifact_data)
-        artifact_file.seek(0)
-
-        # Send the file to the client with the correct filename
-        return send_file(
-            artifact_file, 
-            download_name=artifact.artifact_name, 
-            as_attachment=True
-        )
-        
-api.add_resource(RegisterProgram, '/api/register') 
-
-api.add_resource(DownloadArtifact, '/api/artifact/download/<int:program_id>/<string:version>')
-api.add_resource(ListArtifacts, '/api/artifacts', '/api/artifacts/<int:program_id>')
-
-@app.route('/')
-def home():
-    return '<h1>Flask REST API</h1>'       
-
-@app.route('/status')
-def status():
-    programs = CProgramModel.query.all()
-    return render_template('status.html', programs=programs)
