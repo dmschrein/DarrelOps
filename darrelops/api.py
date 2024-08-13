@@ -6,13 +6,10 @@ from .extensions import app, db, api
 from werkzeug.utils import secure_filename
 from .models import CProgramModel
 from .services.build_service import build_program
-from .services.deploy_service import deploy_to_artifactory
+from .services.deploy_service import deploy_artifact
 from .services.util import allowed_file
 import logging
 
-# artifactory config
-ARTIFACTORY_URL = "http://localhost/artifactory"
-ARTIFACTORY_API_KEY = "fake-test-key"
 
 reg_program_args = reqparse.RequestParser()
 reg_program_args.add_argument('name', type=str, required=True, help="Program name is required")
@@ -74,10 +71,7 @@ class RegisterProgram(Resource):
                 build_cmd=build_cmd,
                 build_dir=build_dir
             )
-            db.session.add(program)
-            db.session.commit()
-            logger.info(f"Program {program.name} registered successfully from repository {repo_url}")
-            
+                    
         else:
             logger.error("No file or repo URL provided.")
             return jsonify({'error': 'No file or repo URL provided'}), 400
@@ -86,8 +80,11 @@ class RegisterProgram(Resource):
             logger.info(f"Starting build for program {program.name}.")
             build_success = build_program(program)
             if build_success:
+                db.session.add(program)
+                db.session.commit()
                 logger.info(f"Build succeeded for program {program.name}. Starting deployment.")
-                deploy_success = deploy_to_artifactory(os.path.join(program.build_dir, program.name), program)
+                deploy_success = deploy_artifact(os.path.join(program.build_dir, program.name), program)
+                
                 if deploy_success:
                     logger.info(f"Deployment succeeded for program {program.name}.")
                     return program, 201

@@ -1,7 +1,10 @@
+
+# darrelops/services/package_service.py
 import shutil
 import os
 from darrelops.models import CProgramModel
 
+# packages build output into zip file
 def package_artifact(program: CProgramModel):
     artifact_dir = os.path.join('artifacts', program.name, program.build_dir)
     os.makedirs(artifact_dir, exist_ok=True)
