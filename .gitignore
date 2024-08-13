@@ -1,9 +1,28 @@
-.venv
+# Python virtual environments
+.venv/
+*.egg-info/
 
-artifactory/
-
-darrelops.egg-info
-hello/
-repos/
+# Logs
+*.log
 app.log
+
+# Compiled Python files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Artifacts and Repos
+darrelops/artifactory/
+darrelops/repos/
+
+# Generated files
+hello/
 hello.zip
+
+# macOS files
+.DS_Store
+
+# Backup files
+*.bak
+*.swp
