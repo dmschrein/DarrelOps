@@ -43,7 +43,7 @@ def clone_repository(repo_url, clone_dir):
     return True
 
 
-
+# build C program
 def build_program(program: CProgramModel):
     logger = logging.getLogger('BuildService')
 
@@ -74,6 +74,7 @@ def build_program(program: CProgramModel):
             logger.error(f"Build failed for program {program.name}: {result.stderr}")
             raise Exception(f"Build failed: {result.stderr}")
         
+
         logger.info(f"Build succeeded for program {program.name}: {result.stdout}")
         return True
     except Exception as e:

@@ -1,13 +1,18 @@
-from flask import jsonify, request
+from flask import jsonify, request, send_file, abort
 from flask_restful import Resource, reqparse, fields, marshal_with
 import os
 import requests
 from .extensions import app, db, api
 from werkzeug.utils import secure_filename
-from .models import CProgramModel
+from .models import CProgramModel, ArtifactModel
 from .services.build_service import build_program
 from .services.deploy_service import deploy_artifact
+from .services.package_service import package_artifact
 from .services.util import allowed_file
+
+
+
+from io import BytesIO
 import logging
 
 
@@ -80,18 +85,28 @@ class RegisterProgram(Resource):
             logger.info(f"Starting build for program {program.name}.")
             build_success = build_program(program)
             if build_success:
+                # store program
                 db.session.add(program)
                 db.session.commit()
-                logger.info(f"Build succeeded for program {program.name}. Starting deployment.")
-                deploy_success = deploy_artifact(os.path.join(program.build_dir, program.name), program)
                 
-                if deploy_success:
-                    logger.info(f"Deployment succeeded for program {program.name}.")
-                    return program, 201
+                logger.info(f"Build succeeded for program {program.name}. Packaging artifact.")
+                artifact_path, new_version = package_artifact(program)
+                if artifact_path:
                     
+                    logger.info(f"Artifact successfully packaged for program {program.name}. Starting deployment.")
+                    deploy_success = deploy_artifact(artifact_path, program, version=new_version)
+                
+                    if deploy_success:
+                        logger.info(f"Deployment succeeded for version {new_version} for program {program.name}.")
+                        return program, 201
+                    else:
+                        
+                        logger.error(f"Deployment failed for program {program.name}")
+                        return jsonify({'error': 'Program registered and built, but deployment failed'}), 500
+                        
                 else:
                     logger.error(f"Deployment failed for program {program.name}")
-                    return jsonify({'error': 'Program registered and built, but deployment failed'}), 500
+                    return jsonify({'error': 'Program registered and built, but packaging artifact failed'}), 500
             else:
                 logger.error(f"Build failed for program {program.name}.")
                 return jsonify({'error': 'Program registered, but build failed'}), 500
@@ -103,8 +118,61 @@ class RegisterProgram(Resource):
     def get(self):
         programs = CProgramModel.query.all()
         return programs, 200
+    
+# Define the output format for the artifacts
+artifact_fields = {
+    'artifact_id': fields.Integer,
+    'program_id': fields.Integer,
+    'artifact_name': fields.String,
+    'artifact_path': fields.String,
+    'version': fields.String,
+}
+
+class ListArtifacts(Resource):
+    @marshal_with(artifact_fields)
+    def get(self, program_id=None):
+        logger = logging.getLogger('ListArtifacts')
+
+        if program_id:
+            # Query all artifacts associated with the given program_id
+            artifacts = ArtifactModel.query.filter_by(program_id=program_id).all()
+            if not artifacts:
+                logger.info(f"No artifacts found for program ID {program_id}.")
+                return {'message': 'No artifacts found for this program.'}, 404
+            logger.info(f"Found {len(artifacts)} artifacts for program ID {program_id}.")
+        else:
+            # Query all artifacts in the database
+            artifacts = ArtifactModel.query.all()
+            logger.info(f"Found {len(artifacts)} artifacts in total.")
+
+        return artifacts, 200
+
+class DownloadArtifact(Resource):
+    def get(self, program_id, version):
+        logger = logging.getLogger('DownloadArtifact')
+
+        # Query the artifact based on program_id and version
+        artifact = ArtifactModel.query.filter_by(program_id=program_id, version=version).first()
+        
+        if not artifact:
+            logger.error(f"Artifact not found for program ID {program_id} and version {version}.")
+            abort(404, description="Artifact not found")
+
+        # Create a file-like object from the binary data
+        artifact_file = BytesIO(artifact.artifact_data)
+        artifact_file.seek(0)
+
+        # Send the file to the client with the correct filename
+        return send_file(
+            artifact_file, 
+            download_name=artifact.artifact_name, 
+            as_attachment=True
+        )
         
 api.add_resource(RegisterProgram, '/api/register') 
+
+api.add_resource(DownloadArtifact, '/api/artifact/download/<int:program_id>/<string:version>')
+api.add_resource(ListArtifacts, '/api/artifacts', '/api/artifacts/<int:program_id>')
 
 @app.route('/')
 def home():

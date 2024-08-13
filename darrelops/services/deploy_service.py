@@ -5,7 +5,7 @@ import os
 import logging
 from darrelops.models import db, ArtifactModel, CProgramModel
 
-def deploy_artifact(artifact_path, program: CProgramModel):
+def deploy_artifact(artifact_path, program: CProgramModel, version):
     logger = logging.getLogger('DeployService')
     logger.info(f"Deploying artifact for program {program.name} to the database.")
 
@@ -21,6 +21,7 @@ def deploy_artifact(artifact_path, program: CProgramModel):
             program_id=program.id,
             artifact_name=artifact_name,
             artifact_path=artifact_path,
+            version=version,
             artifact_data=artifact_data
         )
 
