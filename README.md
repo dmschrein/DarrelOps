@@ -8,6 +8,22 @@ cd DarrelOps
 
 ```
 
+# Create virtual environment
+```sh
+python3 -m venv myenv
+```
+
+# Activate virtual environment on macOS/Linux
+```sh
+source myenv/bin/activate
+```
+
+# Activate virtual environment on Windows
+```sh
+.\myenv\Scripts\activate
+
+```
+
 # Install Dependencies from `requirements.txt
 
 ```sh
@@ -78,8 +94,6 @@ curl -X POST http://localhost:5000/api/register \
      -F "build_dir=./"
      
 ```
-
-
 
 # List All Artifacts
 ```sh
