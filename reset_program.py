@@ -33,6 +33,8 @@ def reset_program():
 
     # Remove the repos directory
     remove_directory(repos_path)
+    
+    remove_file('app.log')
 
     print("Program reset completed.")
 

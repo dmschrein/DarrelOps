@@ -67,6 +67,19 @@ curl -X POST http://localhost:5000/api/register \
 
 ```
 
+```sh
+
+curl -X POST http://localhost:5000/api/register \
+     -H "Content-Type: multipart/form-data" \
+     -F "files=@hello-2-main.zip" \
+     -F "name=hello-2-main" \
+     -F "repo_url=https://github.com/dmschrein/hello-2.git" \
+     -F "build_cmd=make" \
+     -F "build_dir=./"
+     
+```
+
+
 
 # List All Artifacts
 ```sh
@@ -93,4 +106,3 @@ POST `/api/register`: Register a new C program with the build server.
 GET `/api/artifacts`: List all artifacts.
 GET `/api/artifacts/<program_id>`: List all artifacts for a specific program.
 GET `/api/artifact/download/<program_id>/<version>`: Download a specific artifact.
-

@@ -37,6 +37,10 @@ class RegisterProgram(Resource):
         
         logger.info("Received request to register a new program.")
         
+        """ASSUMPTION: User will register the program with a git repository
+            File upload is not fully supported. I would support it in future versions
+            if uses want the option to upload zip files. 
+        """
         try:
             if 'files' in request.files:
                 uploaded_file = request.files['files']
@@ -46,7 +50,10 @@ class RegisterProgram(Resource):
                  
                 if allowed_file(uploaded_file.filename):
                     filename = secure_filename(uploaded_file.filename)
-                    destination = os.path.join('uploads/', filename)
+                    upload_dir = 'uploads/'
+                    if not os.path.exists(upload_dir):
+                        os.makedirs(upload_dir)
+                    destination = os.path.join(upload_dir, filename)
                     uploaded_file.save(destination)
                     logger.info(f"File uploaded and saved at {destination}.")
                 
