@@ -38,6 +38,9 @@ class RegisterProgram(Resource):
         logger.info("Received request to register a new program.")
         
         try:
+            """ASSUMPTION: User would register the project with a git repository
+            TODO: handle in future versions if user wants this option.
+            """
             if 'files' in request.files:
                 uploaded_file = request.files['files']
                 if uploaded_file.filename == '':
