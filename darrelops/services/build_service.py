@@ -1,4 +1,6 @@
-"""Service to build the registered C program"""
+"""Service to build the registered C program
+TODO: Modularize and adding helper functions for repeated logic
+"""
 
 # darrelops/services/build_service.py
 import os
