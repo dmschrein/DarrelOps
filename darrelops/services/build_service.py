@@ -1,4 +1,6 @@
-"""Service to build the registered C program"""
+"""Service to build the registered C program
+TODO: Modularize and adding helper functions for repeated logic
+"""
 
 # darrelops/services/build_service.py
 import os
@@ -51,14 +53,14 @@ def clone_repository(repo_url, clone_dir):
 def build_program(program: CProgramModel):
     logger = logging.getLogger('BuildService')
 
-    # Step 1: Clone the repository
+    # Clone the repository
     clone_dir = os.path.join('repos', program.name)
     repo_cloned = clone_repository(program.repo_url, clone_dir)
     if not repo_cloned:
         logger.error(f"Failed to clone repository for program {program.name}")
         return False
 
-    # Step 2: Update the build directory to the cloned repository
+    # Update the build directory to the cloned repository
     program.build_dir = clone_dir
 
      # Calculate a checksum for the current state of the repository (e.g., using commit hash)
@@ -78,7 +80,7 @@ def build_program(program: CProgramModel):
     # Save build status before starting the build
     save_build_status(program, latest_commit, 'building', 'Build started')
     
-    # Step 3: Run the build command
+    # Run the build command
     logger.info(f"Building program {program.name} with command {program.build_cmd} in directory {program.build_dir}.")
     try:
         result = subprocess.run(
