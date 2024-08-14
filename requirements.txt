@@ -18,3 +18,4 @@ shellingham==1.4.0
 pytest==8.3.2
 requests==2.32.3
 APScheduler==3.10.4
+setuptools==72.2.0

@@ -24,17 +24,20 @@ source myenv/bin/activate
 
 ```
 
-# Install Dependencies from `requirements.txt
+# Install Dependencies from requirements.txt and Setup Program
 
 ```sh
 
 pip install -r requirements.txt
+
+python3 -m build
 
 ```
 
 # Running the server
 
 ```sh
+cd darrelops
 
 python3 -m darrelops runserver
 
