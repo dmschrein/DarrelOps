@@ -10,12 +10,12 @@ cd DarrelOps
 
 # Create virtual environment
 ```sh
-python3 -m venv myenv
+python3 -m venv .venv
 ```
 
 # Activate virtual environment on macOS/Linux
 ```sh
-source myenv/bin/activate
+source .venv/bin/activate
 ```
 
 # Activate virtual environment on Windows
@@ -30,7 +30,7 @@ source myenv/bin/activate
 
 pip install -r requirements.txt
 
-python3 -m build
+pip install -e .
 
 ```
 
