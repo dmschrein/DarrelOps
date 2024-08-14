@@ -35,7 +35,6 @@ pip install -r requirements.txt
 # Running the server
 
 ```sh
-cd darrelops
 
 python3 -m darrelops runserver
 
