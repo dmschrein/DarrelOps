@@ -58,6 +58,14 @@ python3 reset_program.py
 python -m pytest tests/
 ```
 
+
+# ROUTES
+POST `/api/register`: Register a new C program with the build server.<br>
+GET `/api/artifacts`: List all artifacts.<br>
+GET `/api/artifacts/<program_id>`: List all artifacts for a specific program.<br>
+GET `/api/artifact/download/<program_id>/<version>`: Download a specific artifact.<br>
+GET `/status`: Displays status of builds for each registered C program.
+
 # API USAGE
 
 # Register a C Program
@@ -117,8 +125,9 @@ curl -O -J http://localhost:5000/api/artifact/download/1/1.0.0
 
 ```
 
-# Routes
-POST `/api/register`: Register a new C program with the build server.
-GET `/api/artifacts`: List all artifacts.
-GET `/api/artifacts/<program_id>`: List all artifacts for a specific program.
-GET `/api/artifact/download/<program_id>/<version>`: Download a specific artifact.
+
+# Program clean up (run in root directory)
+```sh
+python3 reset_program
+```
+
