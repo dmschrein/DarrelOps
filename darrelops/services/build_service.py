@@ -13,7 +13,7 @@ from darrelops.services.deploy_service import deploy_artifact
 from flask import jsonify
 import shutil
 
-def clone_repository(repo_url, clone_dir):
+def clone_repository(repo_url, clone_dir, repo_branch):
     """Clones the GitHub repository to the specified directory."""
     logger = logging.getLogger('BuildService')
     logger.info(f"Cloning repository {repo_url} into {clone_dir}")
@@ -22,7 +22,7 @@ def clone_repository(repo_url, clone_dir):
         logger.info(f"Directory {clone_dir} already exists. Pulling the latest commits...")
         try:
             result = subprocess.run(
-                ["git", "-C", clone_dir, "pull"],
+                ["git", "-C",  clone_dir, "pull", "origin", repo_branch],
                 capture_output=True,
                 text=True
             )
@@ -35,10 +35,10 @@ def clone_repository(repo_url, clone_dir):
             shutil.rmtree(clone_dir)
             return clone_repository(repo_url, clone_dir)
     else:
-        logger.info(f"Directory {clone_dir} does not exist. Cloning repository {repo_url} into {clone_dir}...")
+        logger.info(f"Directory {clone_dir} does not exist. Cloning branch {repo_branch} from repository {repo_url} into {clone_dir}...")
         try:
             result = subprocess.run(
-                ["git", "clone", repo_url, clone_dir],
+                ["git", "clone", "--single-branch", "--branch", repo_branch, repo_url, clone_dir],
                 capture_output=True,
                 text=True
             )
@@ -54,8 +54,8 @@ def build_program(program: CProgramModel):
     logger = logging.getLogger('BuildService')
 
     # Clone the repository
-    clone_dir = os.path.join('repos', program.name)
-    repo_cloned = clone_repository(program.repo_url, clone_dir)
+    clone_dir = os.path.join('repos', program.name, program.repo_branch)
+    repo_cloned = clone_repository(program.repo_url, clone_dir, program.repo_branch)
     if not repo_cloned:
         logger.error(f"Failed to clone repository for program {program.name}")
         return False
@@ -66,7 +66,7 @@ def build_program(program: CProgramModel):
      # Calculate a checksum for the current state of the repository (e.g., using commit hash)
     try:
         latest_commit = subprocess.check_output(
-            ["git", "-C", clone_dir, "rev-parse", "HEAD"]
+            ["git", "-C", clone_dir, "rev-parse", program.repo_branch]
         ).strip().decode('utf-8')
     except Exception as e:
         logger.error(f"Failed to retrieve latest commit hash: {str(e)}")
@@ -186,6 +186,8 @@ def save_build_status(program, checksum, status, log=None):
         # Create a new BuildStatusModel entry
         build_status = BuildStatusModel(
             program_id=program.id,
+            program=program.name,
+            repo_branch=program.repo_branch,
             checksum=checksum,
             status=status,
             log=log

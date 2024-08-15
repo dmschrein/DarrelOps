@@ -76,6 +76,7 @@ curl -X POST http://localhost:5000/api/register \
      -d '{
            "name": "hello",
            "repo_url": "https://github.com/dmschrein/hello.git",
+           "branch": "main",
            "build_cmd": "make",
            "build_dir": "./"
           }'
@@ -87,6 +88,7 @@ curl -X POST http://localhost:5000/api/register \
      -d '{
            "name": "hello2",
            "repo_url": "https://github.com/dmschrein/hello-2.git",
+           "branch": "main"
            "build_cmd": "make",
            "build_dir": "./"
           }'
@@ -100,6 +102,7 @@ curl -X POST http://localhost:5000/api/register \
      -F "files=@hello-2-main.zip" \
      -F "name=hello-2-main" \
      -F "repo_url=https://github.com/dmschrein/hello-2.git" \
+     -F "branch=main" \
      -F "build_cmd=make" \
      -F "build_dir=./"
      
