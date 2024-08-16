@@ -58,6 +58,14 @@ python3 reset_program.py
 python -m pytest tests/
 ```
 
+
+# ROUTES
+POST `/api/register`: Register a new C program with the build server.<br>
+GET `/api/artifacts`: List all artifacts.<br>
+GET `/api/artifacts/<program_id>`: List all artifacts for a specific program.<br>
+GET `/api/artifact/download/<program_id>/<version>`: Download a specific artifact.<br>
+GET `/status`: Displays status of builds for each registered C program.
+
 # API USAGE
 
 # Register a C Program
@@ -68,6 +76,7 @@ curl -X POST http://localhost:5000/api/register \
      -d '{
            "name": "hello",
            "repo_url": "https://github.com/dmschrein/hello.git",
+           "repo_branch": "main",
            "build_cmd": "make",
            "build_dir": "./"
           }'
@@ -77,8 +86,22 @@ curl -X POST http://localhost:5000/api/register \
 curl -X POST http://localhost:5000/api/register \
      -H "Content-Type: application/json" \
      -d '{
-           "name": "hello2",
+           "name": "hello",
+           "repo_url": "https://github.com/dmschrein/hello.git",
+           "repo_branch": "development",
+           "build_cmd": "make",
+           "build_dir": "./"
+          }'
+```
+
+
+```sh
+curl -X POST http://localhost:5000/api/register \
+     -H "Content-Type: application/json" \
+     -d '{
+           "name": "hello",
            "repo_url": "https://github.com/dmschrein/hello-2.git",
+           "repo_branch": "main",
            "build_cmd": "make",
            "build_dir": "./"
           }'
@@ -92,6 +115,7 @@ curl -X POST http://localhost:5000/api/register \
      -F "files=@hello-2-main.zip" \
      -F "name=hello-2-main" \
      -F "repo_url=https://github.com/dmschrein/hello-2.git" \
+     -F "repo_branch=main" \
      -F "build_cmd=make" \
      -F "build_dir=./"
      
@@ -117,8 +141,9 @@ curl -O -J http://localhost:5000/api/artifact/download/1/1.0.0
 
 ```
 
-# Routes
-POST `/api/register`: Register a new C program with the build server.
-GET `/api/artifacts`: List all artifacts.
-GET `/api/artifacts/<program_id>`: List all artifacts for a specific program.
-GET `/api/artifact/download/<program_id>/<version>`: Download a specific artifact.
+
+# Program clean up (run in root directory)
+```sh
+python3 reset_program
+```
+

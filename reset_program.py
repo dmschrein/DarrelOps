@@ -23,6 +23,7 @@ def reset_program():
     database_path = 'darrelops/artifactory/database.db'
     artifactory_path = 'darrelops/artifactory/'
     repos_path = 'darrelops/repos'
+    uploads_path = 'darrelops/uploads'
     
 
     # Remove the database file
@@ -33,6 +34,9 @@ def reset_program():
 
     # Remove the repos directory
     remove_directory(repos_path)
+    
+    # remove file uploads
+    remove_directory(uploads_path)
     
     remove_file('app.log')
 
