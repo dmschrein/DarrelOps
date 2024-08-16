@@ -52,9 +52,13 @@ def clone_repository(repo_url, clone_dir, repo_branch):
 
 def build_program(program: CProgramModel):
     logger = logging.getLogger('BuildService')
-
+ 
+    # sanitize repo url
+    program_repo = str(program.repo_url)
+    sanitized_url = program_repo.replace('https://', '').replace('/', '_')
+    
     # Clone the repository
-    clone_dir = os.path.join('repos', program.name, program.repo_branch)
+    clone_dir = os.path.join('repos', sanitized_url, program.repo_branch)
     repo_cloned = clone_repository(program.repo_url, clone_dir, program.repo_branch)
     if not repo_cloned:
         logger.error(f"Failed to clone repository for program {program.name}")
@@ -93,6 +97,7 @@ def build_program(program: CProgramModel):
             logger.error(f"Build failed for program {program.name}: {result.stderr}")
             save_build_status(program, latest_commit, 'failed', result.stderr)
             raise Exception(f"Build failed: {result.stderr}")
+            
         
         logger.info(f"Build succeeded for program {program.name}: {result.stdout}")
         save_build_status(program, latest_commit, 'completed', result.stdout)
@@ -105,8 +110,13 @@ def build_program(program: CProgramModel):
         return True
     except Exception as e:
         logger.error(f"Build process encountered an exception: {str(e)}")
-        save_build_status(program, latest_commit, 'failed', str(e))
-        return False
+        
+        # Fixed duplicate build failed build log
+        if not db.session.new: 
+            save_build_status(program, latest_commit, 'failed', str(e))
+        
+            db.session.rollback()
+            return False
     
     
     
@@ -122,7 +132,11 @@ def check_for_new_commits():
             if not program.repo_url:
                 continue
 
-            repo_dir = os.path.join('repos', program.name, program.repo_branch)
+            # sanitize repo url
+            program_repo = str(program.repo_url)
+            sanitized_url = program_repo.replace('https://', '').replace('/', '_')
+            
+            repo_dir = os.path.join('repos', sanitized_url, program.repo_branch)
             if os.path.exists(repo_dir):
                 try:
                     logger.info(f"Fetching new commits in remote branch {program.repo_branch}")

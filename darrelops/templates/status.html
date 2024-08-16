@@ -18,8 +18,9 @@
 <body>
     <h1>Build Statuses</h1>
     {% for program in programs %}
-        <h2>{{ program.name }}</h2>
-        <h2>{{ program.repo_branch }}</h2>
+        <h2>Program: {{ program.name }}</h2>
+        <h3><pre>    git repository: {{ program.repo_url }}</pre></h3>
+        <h3><pre>        branch: {{ program.repo_branch }}</pre></h3>
         <ul>
         {% for status in program.build_statuses %}
             <li>

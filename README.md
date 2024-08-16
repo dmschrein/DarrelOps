@@ -74,7 +74,7 @@ GET `/status`: Displays status of builds for each registered C program.
 curl -X POST http://localhost:5000/api/register \
      -H "Content-Type: application/json" \
      -d '{
-           "name": "hello-main",
+           "name": "hello",
            "repo_url": "https://github.com/dmschrein/hello.git",
            "repo_branch": "main",
            "build_cmd": "make",
@@ -86,7 +86,7 @@ curl -X POST http://localhost:5000/api/register \
 curl -X POST http://localhost:5000/api/register \
      -H "Content-Type: application/json" \
      -d '{
-           "name": "hello-dev",
+           "name": "hello",
            "repo_url": "https://github.com/dmschrein/hello.git",
            "repo_branch": "development",
            "build_cmd": "make",
@@ -99,9 +99,9 @@ curl -X POST http://localhost:5000/api/register \
 curl -X POST http://localhost:5000/api/register \
      -H "Content-Type: application/json" \
      -d '{
-           "name": "hello2",
+           "name": "hello",
            "repo_url": "https://github.com/dmschrein/hello-2.git",
-           "repo_branch": "main"
+           "repo_branch": "main",
            "build_cmd": "make",
            "build_dir": "./"
           }'

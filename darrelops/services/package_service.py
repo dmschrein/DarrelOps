@@ -11,11 +11,16 @@ import os
 from darrelops.models import CProgramModel, ArtifactModel
 
 def package_artifact(program: CProgramModel):
+    
+    # sanitize repo url
+    program_repo = str(program.repo_url)
+    sanitized_url = program_repo.replace('https://', '').replace('/', '_')
+    
     # Determine the directory for storing the artifacts
     artifactory_dir = 'artifactory'
     if not os.path.exists(artifactory_dir):
         os.makedirs(artifactory_dir)
-    artifact_dir = os.path.join(artifactory_dir, 'artifacts', program.name)
+    artifact_dir = os.path.join(artifactory_dir, 'artifacts', sanitized_url, program.repo_branch)
     os.makedirs(artifact_dir, exist_ok=True)
 
     # Determine the latest version of the artifact
