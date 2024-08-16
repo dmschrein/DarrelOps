@@ -7,7 +7,7 @@ class CProgramModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=False, nullable=False) 
     repo_url = db.Column(db.String, unique=False, nullable=False)
-    repo_branch = db.Column(db.String, unique=False, default='main')
+    repo_branch = db.Column(db.String, unique=False, nullable=False)
     build_cmd = db.Column(db.String, nullable=False, default="make")
     build_dir = db.Column(db.String, nullable=False, default="./")
     latest_commit = db.Column(db.String(40), nullable=True) 

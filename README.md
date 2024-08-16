@@ -105,7 +105,6 @@ curl -X POST http://localhost:5000/api/register \
            "build_cmd": "make",
            "build_dir": "./"
           }'
-
 ```
 
 ```sh
