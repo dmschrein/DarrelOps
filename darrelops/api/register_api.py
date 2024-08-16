@@ -56,6 +56,7 @@ class RegisterProgram(Resource):
                     program = CProgramModel(
                         name=filename.rsplit('.', 1)[0],
                         repo_url=None,
+                        repo_branch=None,
                         build_cmd="make",
                         build_dir="./"
                     )
@@ -66,12 +67,14 @@ class RegisterProgram(Resource):
             elif 'repo_url' in request.json:
                 repo_url = request.json['repo_url']
                 name = request.json.get('name', repo_url.split('/')[-1].replace('.git', ''))
+                repo_branch = request.json['repo_branch']
                 build_cmd = request.json.get('build_cmd', 'make')
                 build_dir = request.json.get('build_dir', './')
 
                 program = CProgramModel(
                     name=name,
                     repo_url=repo_url,
+                    repo_branch=repo_branch,
                     build_cmd=build_cmd,
                     build_dir=build_dir
                 )

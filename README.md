@@ -74,9 +74,9 @@ GET `/status`: Displays status of builds for each registered C program.
 curl -X POST http://localhost:5000/api/register \
      -H "Content-Type: application/json" \
      -d '{
-           "name": "hello",
+           "name": "hello-main",
            "repo_url": "https://github.com/dmschrein/hello.git",
-           "branch": "main",
+           "repo_branch": "main",
            "build_cmd": "make",
            "build_dir": "./"
           }'
@@ -86,9 +86,22 @@ curl -X POST http://localhost:5000/api/register \
 curl -X POST http://localhost:5000/api/register \
      -H "Content-Type: application/json" \
      -d '{
+           "name": "hello-dev",
+           "repo_url": "https://github.com/dmschrein/hello.git",
+           "repo_branch": "development",
+           "build_cmd": "make",
+           "build_dir": "./"
+          }'
+```
+
+
+```sh
+curl -X POST http://localhost:5000/api/register \
+     -H "Content-Type: application/json" \
+     -d '{
            "name": "hello2",
            "repo_url": "https://github.com/dmschrein/hello-2.git",
-           "branch": "main"
+           "repo_branch": "main"
            "build_cmd": "make",
            "build_dir": "./"
           }'
@@ -102,7 +115,7 @@ curl -X POST http://localhost:5000/api/register \
      -F "files=@hello-2-main.zip" \
      -F "name=hello-2-main" \
      -F "repo_url=https://github.com/dmschrein/hello-2.git" \
-     -F "branch=main" \
+     -F "repo_branch=main" \
      -F "build_cmd=make" \
      -F "build_dir=./"
      
